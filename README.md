@@ -27,6 +27,7 @@ make prereqs          # what's missing?
 make tools            # install pinned kubectl/helm/kustomize/etcdctl into ~/.local/bin
 make setup            # create the 'cka-labs' minikube cluster (takes a few minutes)
 make lab-00           # run environment checks + setup for lab 00, then read labs/00-*/README.md
+./cka-tui.sh          # optional TUI: split view with README/SOLUTION + interactive shell (--help for keys)
 ```
 
 ## Lab index
@@ -85,7 +86,9 @@ Every `labs/NN-slug/` directory contains exactly:
 | `teardown.sh` | removes everything the lab created; never deletes the cluster |
 | `manifests/` | YAML used by setup/verify |
 
-Workflow:
+Workflow — `make` targets run from the repo root (where the Makefile is);
+inside a lab directory the equivalent scripts work directly (`./verify.sh`,
+`./teardown.sh`, ...):
 
 ```bash
 make lab-NN       # check-env + setup, then read labs/NN-*/README.md and do the tasks

@@ -200,3 +200,29 @@ Globals: `REPO_ROOT`, `LAB_DIR`, `LAB_ID`, `LAB_SLUG`, `LAB_NAME`,
 5. Negative path: `setup.sh` then `verify.sh` (no solve) must exit 1 and
    list the failed tasks.
 6. Add the lab to the index table in the top-level README.
+
+## Optional TUI
+
+`./cka-tui.sh` — optional split-pane TUI (tmux + Textual). `scripts/tui.py`
+and `.venv/` are exempt from the Bash-only rule. The TUI never commits or
+mutates anything itself beyond sending `make` commands to the shell pane.
+
+- Requires tmux and Python 3. First run offers to create `.venv/` and
+  install `textual>=8,<9` from `scripts/requirements-tui.txt`
+  (non-interactive stdin exits with the manual command instead).
+- Layout: tmux session `cka-labs-tui`, left pane = `$SHELL` at repo root,
+  right pane = `scripts/tui.py`. Inside an existing tmux session it opens
+  a new window instead and kills only that window on quit.
+- Panes are addressed by `#{pane_id}`/`#{window_id}`/`#{session_id}` —
+  never `session:0.0` (breaks with base-index 1).
+- Keys: n/p next/prev lab · 1/2/3 README/SOLUTION/OUTPUT tabs ·
+  s start · v verify (also streams verify.sh to OUTPUT) · t teardown ·
+  o solve (confirm first) · L lab list · ? in-app help · q quit.
+  Scroll active tab: arrows/PageUp/PageDown/Home/End or j/k/Space/b.
+- First run shows a tmux orientation notice (skipped on non-TTY);
+  `./cka-tui.sh --help` prints it, `--no-help`/`CKA_TUI_NO_HELP=1` or the
+  `.state/tui_help_seen` marker suppress it.
+- Mouse: `mouse on` is set only on the session the TUI creates (never when
+  nested inside the user's own tmux — there the user's config applies).
+- State: current lab in `.state/tui_state` (JSON); progress polled from
+  `.progress/` every 5 s.
