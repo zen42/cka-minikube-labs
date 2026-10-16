@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-ing
+  namespace: ts-net
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: web.ts.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web-service   # does not exist -> 503 via controller
+            port:
+              number: 80

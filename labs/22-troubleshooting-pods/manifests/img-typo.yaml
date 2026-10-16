@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: img-typo
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: img-typo}
+  template:
+    metadata:
+      labels: {app: img-typo}
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.27-typo

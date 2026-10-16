@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crash-app
+spec:
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: ["sh", "-c", "echo 'fatal: FOO is not set'; exit 3"]

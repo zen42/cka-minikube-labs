@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stuck
+  namespace: ts-cp
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: stuck}
+  template:
+    metadata:
+      labels: {app: stuck}
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.27

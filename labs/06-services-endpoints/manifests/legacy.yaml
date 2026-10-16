@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: legacy-api
+  namespace: services
+  labels:
+    app: legacy-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: legacy-api
+  template:
+    metadata:
+      labels:
+        app: legacy-api
+        tier: api
+    spec:
+      containers:
+        - name: app
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              mkdir -p /www && echo "legacy-api" > /www/index.html \
+                && httpd -f -p 80 -h /www
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: legacy-svc
+  namespace: services
+spec:
+  # BUG: selector has a typo ('legacy-ap' vs 'legacy-api') — no endpoints.
+  selector:
+    app: legacy-ap
+  ports:
+    - port: 80
+      targetPort: 80

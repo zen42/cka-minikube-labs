@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: probe-fail
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: probe-fail}
+  template:
+    metadata:
+      labels: {app: probe-fail}
+    spec:
+      containers:
+      - name: app
+        image: nginx:1.27
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
