@@ -3,3 +3,6 @@
 *.swp
 .out/
 .venv/
+PROGRESS.md
+__pycache__/
+*.pyc

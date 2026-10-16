@@ -8,15 +8,21 @@ Calico CNI so NetworkPolicies are enforced).
 Each lab is a directory under `labs/` with exam-style tasks, a reference
 solution, and scripts that set up, solve, verify, and reset the lab state.
 
+Unofficial practice labs. Not affiliated with, endorsed by, or sponsored
+by the CNCF or The Linux Foundation. 'CKA' and 'Certified Kubernetes
+Administrator' are trademarks of The Linux Foundation.
+
 ## Requirements
 
 | Requirement | Notes |
 |-------------|-------|
-| Linux (x86_64 or arm64) | tested on Debian 13 |
-| bash >= 4.4, make, jq, curl, git | from your distro |
+| Linux (x86_64 or arm64) | developed and tested on Debian 13 with rootful podman; docker driver expected to work but less tested |
+| bash >= 4.4, make, jq, curl, openssl, git | from your distro |
 | minikube | `minikube version` >= 1.39 recommended |
-| A container driver | docker, or podman (rootless or `sudo -n podman`) |
-| ~4 CPU / 8 GB RAM / 20 GB disk | multi-node labs add worker nodes on demand |
+| A container driver | docker, or podman: rootful (passwordless `sudo podman`) or rootless (experimental, untested — needs cgroup v2 delegation) |
+| ~4 CPU / 8 GB RAM minimum / 20 GB disk | node memory auto-sizes to half of RAM (floor 4 GiB — expect ingress throttling); 16 GB recommended for multi-node labs 14/20/23 |
+| Internet access | image pulls, helm repos, GitHub release downloads |
+| tmux + python3 | optional — only for `./cka-tui.sh` |
 | `fs.inotify.max_user_instances` >= 1024 | multi-node labs 14/20/23; `make prereqs` tells you how |
 | kubectl, helm, kustomize, etcdctl | installed for you by `make tools` |
 
@@ -107,7 +113,7 @@ make test-NN      # machine-test the whole lab end-to-end (setup->solve->verify-
 - **Output files**: tasks that say "save X to a file" write under
   `~/cka-labs-out/NN/` (override the root with `CKA_OUT`).
 - **Progress**: `verify.sh` records completion markers in `.progress/`;
-  `make progress` regenerates `PROGRESS.md`.
+  `make progress` regenerates `PROGRESS.md` (local, gitignored).
 - In the exam (and optionally here) set up:
 
   ```bash
@@ -118,10 +124,11 @@ make test-NN      # machine-test the whole lab end-to-end (setup->solve->verify-
 
 ## Troubleshooting
 
-- **podman driver**: rootless podman needs `newuidmap`/`fuse-overlayfs`. If
-  only rootful podman works (e.g. `sudo -n podman info` succeeds), minikube
-  handles the sudo calls itself — just ensure your sudoers rule is
-  `NOPASSWD` for podman. `make setup` auto-detects a working driver.
+- **podman driver**: `make setup` auto-detects a working driver —
+  docker, then rootful podman (passwordless `sudo podman`), then rootless
+  podman (experimental, untested — needs `newuidmap`/`fuse-overlayfs` and
+  cgroup v2 delegation; `MINIKUBE_ROOTLESS=true` is set for you). For
+  rootful, ensure your sudoers rule is `NOPASSWD` for podman.
 - **podman DNS broken inside the node?** `make setup` pre-creates the
   `cka-labs` podman network with `--disable-dns` so the node uses the host
   resolver. Podman's own gateway DNS (aardvark-dns, even when installed)
