@@ -74,6 +74,21 @@ node_ssh() {
 
 control_plane_node() { printf '%s\n' "$MINIKUBE_PROFILE"; }
 
+# profile_exists — predicate: the lab minikube profile exists (valid or not).
+profile_exists() {
+    minikube profile list -o json 2>/dev/null \
+        | jq -e --arg p "$MINIKUBE_PROFILE" \
+            '[.valid[]?, .invalid[]?] | any(.Name == $p)' >/dev/null 2>&1
+}
+
+# podman_cmd — prints the working podman invocation: 'sudo -n podman' on
+# hosts where only rootful podman is passwordless. Callers must first check
+# podman is usable (podman info / sudo -n podman info).
+podman_cmd() {
+    if sudo -n podman info >/dev/null 2>&1; then printf 'sudo -n podman';
+    else printf 'podman'; fi
+}
+
 minikube_node_count() {
     k get nodes --no-headers 2>/dev/null | wc -l
 }
@@ -142,9 +157,7 @@ require_command() {
 }
 
 require_cluster() {
-    minikube profile list -o json 2>/dev/null \
-        | jq -e --arg p "$MINIKUBE_PROFILE" \
-            '[.valid[]?, .invalid[]?] | any(.Name == $p)' >/dev/null 2>&1 \
+    profile_exists \
         || die "minikube profile '$MINIKUBE_PROFILE' does not exist — run: make setup"
     local status
     status="$(mk status -o json 2>/dev/null || true)"

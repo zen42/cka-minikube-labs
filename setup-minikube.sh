@@ -27,11 +27,6 @@ DRIVER="$(detect_driver)"
 info "driver: $DRIVER"
 
 # --- podman quirks on this host ---------------------------------------------
-podman_cmd() {
-    if sudo -n podman info >/dev/null 2>&1; then printf 'sudo -n podman';
-    else printf 'podman'; fi
-}
-
 aardvark_missing() {
     ! command -v aardvark-dns >/dev/null 2>&1 \
         && ! ls /usr/lib/podman/aardvark-dns /usr/libexec/podman/aardvark-dns \
@@ -117,12 +112,6 @@ disk_gb=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
 (( disk_gb >= 20 )) || warn "only ${disk_gb}GB free on / (<20GB recommended)"
 
 # --- start or resume the profile -------------------------------------------
-profile_exists() {
-    minikube profile list -o json 2>/dev/null \
-        | jq -e --arg p "$MINIKUBE_PROFILE" \
-            '[.valid[]?, .invalid[]?] | any(.Name == $p)' >/dev/null 2>&1
-}
-
 cluster_running() {
     mk status 2>/dev/null | grep -q 'host: Running'
 }

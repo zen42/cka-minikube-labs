@@ -138,8 +138,11 @@ make test-NN      # machine-test the whole lab end-to-end (setup->solve->verify-
   `--context cka-labs`. For your own exploring run
   `kubectl config use-context cka-labs`.
 - **Cluster wedged?** `make reset-cluster` deletes and recreates only the
-  `cka-labs` profile. `minikube delete -p cka-labs` never touches other
-  profiles — the `-p` flag is always explicit in this repo.
+  `cka-labs` profile; `make teardown-cluster` deletes it without recreating
+  (`./teardown-minikube.sh --all` also wipes `.progress/` and
+  `~/cka-labs-out` for a completely fresh start). `minikube delete -p
+  cka-labs` never touches other profiles — the `-p` flag is always explicit
+  in this repo.
 - **Partial lab state?** `make teardown-NN`, or `make clean-all` to wipe all
   lab namespaces (`kubectl delete ns -l cka-lab`).
 

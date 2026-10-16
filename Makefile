@@ -10,7 +10,7 @@ LAB_DIRS := $(sort $(wildcard labs/[0-9][0-9]-*))
 # resolve labs/$*-* -> dir (empty if no match)
 lab_dir = $(firstword $(wildcard labs/$(1)-*))
 
-.PHONY: help prereqs tools setup stop start reset-cluster clean-all progress test-all
+.PHONY: help prereqs tools setup stop start reset-cluster teardown-cluster clean-all progress test-all
 .PHONY: lab-% verify-% solve-% teardown-% test-%
 
 help:
@@ -22,6 +22,7 @@ help:
 > @echo "  make setup            create/verify the cka-labs minikube cluster"
 > @echo "  make stop|start       stop or resume the cka-labs cluster"
 > @echo "  make reset-cluster    delete and recreate the cka-labs cluster"
+> @echo "  make teardown-cluster delete the cka-labs cluster (start fresh)"
 > @echo
 > @echo "Labs (NN = lab number, e.g. make lab-02):"
 > @echo "  make lab-NN           check env + set up lab NN, then read its README"
@@ -52,8 +53,11 @@ start:
 > minikube -p cka-labs start
 
 reset-cluster:
-> minikube -p cka-labs delete
+> ./teardown-minikube.sh
 > ./setup-minikube.sh
+
+teardown-cluster:
+> ./teardown-minikube.sh
 
 lab-%:
 > @dir="$$(ls -d labs/$*-* 2>/dev/null | head -1)"; \
