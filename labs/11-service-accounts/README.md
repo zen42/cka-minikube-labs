@@ -34,7 +34,8 @@ pod, TokenRequest vs projected volumes, imagePullSecrets, and SA RBAC.
 4. From inside `api-client`, list the namespace's pods through the API using
    the mounted token and CA, and save the JSON to
    `~/cka-labs-out/11/pods-via-api.txt`:
-   `curl -sS --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://kubernetes.default.svc/api/v1/namespaces/sa/pods`
+   `kubectl exec api-client -n sa -- sh -c 'curl -sS --cacert /var/run/secrets/kubernetes.io/serviceaccount/ca.crt -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://kubernetes.default.svc/api/v1/namespaces/sa/pods'`
+   (single-quoted, so `$(cat ...)` reads the token *inside* the pod).
 5. Create pod `no-token` (busybox:1.36 `sleep 3600`) with
    `automountServiceAccountToken: false`.
 6. `kubectl create token app-sa -n sa --duration=1h` → save to
@@ -58,13 +59,13 @@ pod, TokenRequest vs projected volumes, imagePullSecrets, and SA RBAC.
 ## Verify
 
 ```bash
-make verify-11
+make verify-11     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-11
+make teardown-11   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes namespace `sa`, the ClusterRoleBinding, and the output dir.

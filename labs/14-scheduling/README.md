@@ -61,13 +61,13 @@ cordon/uncordon.
 ## Verify
 
 ```bash
-make verify-14
+make verify-14     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-14
+make teardown-14   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the namespace, PriorityClass, the `disktype` label and `dedicated`

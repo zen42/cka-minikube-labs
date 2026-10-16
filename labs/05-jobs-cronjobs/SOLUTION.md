@@ -87,7 +87,7 @@ kind: Job
 metadata:
   name: ttl-job
 spec:
-  ttlSecondsAfterFinished: 600
+  ttlSecondsAfterFinished: 3600
   template:
     spec:
       restartPolicy: Never

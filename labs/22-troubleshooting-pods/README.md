@@ -41,10 +41,13 @@ diagnostic artefact the task asks for, then fix it — and prove the fix.
    so it runs.
 6. Pod `cm-missing` never starts its container
    (`CreateContainerConfigError`). Make it run — you may not need to
-   touch the pod itself.
+   touch the pod itself: create the ConfigMap the pod references
+   (discover its name via `kubectl describe pod cm-missing -n ts-pods`)
+   with `MODE=prod`.
 7. Pod `quiet` (pause image) can't take a shell. Start a busybox
-   ephemeral debug container inside it (`kubectl debug --target=quiet
-   -- sleep 3600`).
+   ephemeral debug container inside it:
+   `kubectl debug quiet -n ts-pods --image=busybox:1.36 --target=quiet
+   -- sleep 3600`.
 8. Debug the *node*: `kubectl debug node/cka-labs -n default
    --image=busybox:1.36 -- chroot /host cat /etc/hostname` (the debug
    pod lands in your *context* namespace — pin `-n default`), wait for
@@ -60,13 +63,13 @@ diagnostic artefact the task asks for, then fix it — and prove the fix.
 ## Verify
 
 ```bash
-make verify-22
+make verify-22     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-22
+make teardown-22   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

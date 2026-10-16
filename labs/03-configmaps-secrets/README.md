@@ -40,8 +40,8 @@ mounts — and learn the different Secret types you will meet in the exam.
    from `configMapKeyRef` `app-config`/`APP_MODE` and `DB_PASSWORD` from
    `secretKeyRef` `db-creds`/`password`.
 7. Create pod `vol-pod` (busybox:1.36, `sleep 3600`) mounting ConfigMap
-   `app-props` read-only at `/etc/props` and Secret `db-creds` at
-   `/etc/creds`.
+   `app-props` at `/etc/props` and Secret `db-creds` at `/etc/creds` —
+   both mounts read-only (`readOnly: true`).
 8. Change `LOG_LEVEL` to `debug` in ConfigMap `app-config`, then run
    `kubectl rollout restart deployment reader` so the env vars are picked
    up (env vars are only injected at container start!).
@@ -53,13 +53,13 @@ mounts — and learn the different Secret types you will meet in the exam.
 ## Verify
 
 ```bash
-make verify-03
+make verify-03     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-03
+make teardown-03   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

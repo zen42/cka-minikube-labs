@@ -22,6 +22,12 @@ a ConfigMap created after the snapshot disappears.
 - etcd is a static pod on the control-plane node. All etcd commands run
   inside the node — `minikube -p cka-labs ssh` then `sudo`. Setup copies
   `etcdctl`/`etcdutl` to `/usr/local/bin/` in the node.
+- Node commands that save a file run from the host:
+  `minikube -p cka-labs ssh -- <command> > ~/cka-labs-out/21/<file>`.
+  Plain `minikube -p cka-labs ssh` is fine for interactive exploration —
+  but the saved file must be produced from the host. (The etcd snapshot
+  itself at `/var/lib/minikube/etcd-backup/snapshot.db` correctly lives
+  ON the node.)
 - Connection flags for this cluster:
   `--endpoints=https://127.0.0.1:2379`
   `--cacert=/var/lib/minikube/certs/etcd/ca.crt`
@@ -35,12 +41,15 @@ a ConfigMap created after the snapshot disappears.
 
 ## Tasks
 
-1. Inside the node, save `etcdctl ... endpoint health` and
+1. Run on the node (via `minikube -p cka-labs ssh --`), saving from the
+   host: `etcdctl ... endpoint health` and
    `etcdctl ... member list -w table` to
    `~/cka-labs-out/21/endpoint-health.txt` and `members.txt`.
-2. `etcdctl ... snapshot save /var/lib/minikube/etcd-backup/snapshot.db`,
-   then validate it: `etcdutl snapshot status ... -w table` →
-   `~/cka-labs-out/21/snapshot-status.txt`.
+2. `etcdctl ... snapshot save /var/lib/minikube/etcd-backup/snapshot.db`
+   (the snapshot file stays on the node), then validate it:
+   `etcdutl snapshot status ... -w table` →
+   `~/cka-labs-out/21/snapshot-status.txt` (host file — redirect from
+   the host).
 3. Back on the host, create ConfigMap `after-snapshot` in `etcd-lab`
    (marker `after`) — it exists only because it is *after* the snapshot.
 4. Restore:
@@ -68,13 +77,13 @@ a ConfigMap created after the snapshot disappears.
 ## Verify
 
 ```bash
-make verify-21
+make verify-21     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-21
+make teardown-21   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the namespace, removes the backup/restored/pre-restore dirs on
@@ -98,4 +107,3 @@ Last resort: `make reset-cluster` rebuilds the lab cluster (only the
 ## Docs
 
 - https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/
-- https://github.com/etcd-io/etcd (etcdctl/etcdutl snapshot commands)

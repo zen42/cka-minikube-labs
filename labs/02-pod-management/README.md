@@ -51,13 +51,13 @@ Create, inspect, exec into, copy from, and forward to Pods — the everyday
 ## Verify
 
 ```bash
-make verify-02
+make verify-02     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-02
+make teardown-02   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

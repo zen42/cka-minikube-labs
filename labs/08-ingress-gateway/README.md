@@ -17,7 +17,8 @@ NGINX Gateway Fabric).
   `ingress-nginx` and `nginx-gateway`).
 - **Seeded for you (by setup.sh, not a task):** deployments+services `shop`
   and `blog` (busybox httpd, each answers with its name on `/` and
-  `/<name>/`); Gateway API CRDs + NGINX Gateway Fabric (`$NGF_VERSION`,
+  `/<name>/`); Gateway API CRDs + NGINX Gateway Fabric (the version pinned
+  in `versions.env`,
   GatewayClass `nginx`) if not already installed. NGF stays installed after
   teardown.
 - **Ingress controller:** the `ingress` minikube addon (NGINX) —
@@ -34,7 +35,7 @@ NGINX Gateway Fabric).
   `X-nginx` in the same namespace — that is what you probe.
 - setup.sh disables nginx `reuseport` on the ingress controller — under
   this driver it blackholes ~half of new connections after config reloads
-  (environment quirk, see AGENTS.md).
+  (an environment quirk of this lab setup).
 
 ## Tasks
 
@@ -67,13 +68,13 @@ NGINX Gateway Fabric).
 ## Verify
 
 ```bash
-make verify-08
+make verify-08     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-08
+make teardown-08   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes namespace `ingress` (the Gateway's data plane goes with it).

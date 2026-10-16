@@ -23,6 +23,11 @@ drain/uncordon maintenance cycle.
 - **Start here:** `make lab-23`
 - Node access: `minikube -p cka-labs ssh -n <node>` (sudo is
   passwordless).
+- Node commands that save a file run from the host:
+  `minikube -p cka-labs ssh -n <node> -- <command> >
+  ~/cka-labs-out/23/<file>`. Plain `minikube -p cka-labs ssh` is fine for
+  interactive exploration — but the saved file must be produced from the
+  host.
 - Multi-node needs `fs.inotify.max_user_instances >= 1024` on the
   host; `check-env.sh` tells you if yours is too low.
 
@@ -31,8 +36,9 @@ drain/uncordon maintenance cycle.
 1. Survey: save `kubectl get nodes -o wide` to `nodes.txt` and
    `kubectl describe node cka-labs-m03` to `describe-m03.txt`. Write
    the name of the node that is *not* Ready to `notready-node.txt`.
-2. SSH into the broken node (`minikube -p cka-labs ssh -n
-   cka-labs-m03`), save `systemctl status kubelet` to
+2. On the broken node (via `minikube -p cka-labs ssh -n
+   cka-labs-m03 --`, saving from the host): save `systemctl status
+   kubelet` to
    `kubelet-status.txt` and the last 50 `journalctl -u kubelet` lines
    to `kubelet-journal.txt`, then fix it.
 3. Wait until the `node-app` deployment (pinned to m03 via
@@ -55,13 +61,13 @@ drain/uncordon maintenance cycle.
 ## Verify
 
 ```bash
-make verify-23
+make verify-23     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-23
+make teardown-23   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Restarts kubelet everywhere, uncordons all nodes, removes the taint,

@@ -22,8 +22,12 @@ check_jsonpath "cka-labs-m03 is Ready" \
     node/cka-labs-m03 \
     '{.status.conditions[?(@.type=="Ready")].status}' 'True'
 
-# Task 3 — nodeSelector workload recovered
+# Task 3 — nodeSelector workload recovered (give the reschedule a moment)
 check "node-app is available" deploy_available ts-nodes node-app
+wait_for "node-app has 2 ready replicas" 120 \
+    bash -c "kubectl --context $KUBE_CONTEXT -n ts-nodes get deploy \
+        node-app -o jsonpath='{.status.readyReplicas}' 2>/dev/null \
+        | grep -qE '^2$'" || true
 _ready="$(k get deploy node-app -n ts-nodes \
     -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo 0)"
 check_eq "node-app has 2 ready replicas" "$_ready" '2'

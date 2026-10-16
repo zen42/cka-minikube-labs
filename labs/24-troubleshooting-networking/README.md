@@ -48,13 +48,13 @@ responds.
 ## Verify
 
 ```bash
-make verify-24
+make verify-24     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-24
+make teardown-24   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Restores coredns to its original replica count, deletes the namespace

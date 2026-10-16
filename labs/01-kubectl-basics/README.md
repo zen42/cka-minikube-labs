@@ -52,13 +52,13 @@ explain, apply, patch, edit, label, annotate, and output formatting.
 ## Verify
 
 ```bash
-make verify-01
+make verify-01     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-01
+make teardown-01   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

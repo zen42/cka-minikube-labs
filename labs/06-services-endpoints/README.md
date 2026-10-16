@@ -33,7 +33,8 @@ an EndpointSlice — the layer between Services and Pods.
    Label the pods `app=web` (via template labels), then expose the
    deployment as ClusterIP Service `web-svc` on port 80.
 2. Create NodePort Service `web-nodeport` for `web` with nodePort `30080`.
-3. Create LoadBalancer Service `web-lb` on port 80. Note that `EXTERNAL-IP`
+3. Create LoadBalancer Service `web-lb` on port 80 selecting the `web`
+   pods (`kubectl expose deployment web --type=LoadBalancer`). Note that `EXTERNAL-IP`
    stays `<pending>` — that is expected without `minikube tunnel`.
 4. Service `legacy-svc` has no endpoints. Find why (`get endpoints`,
    `describe`) and fix it — the pods ARE running.
@@ -54,13 +55,13 @@ an EndpointSlice — the layer between Services and Pods.
 ## Verify
 
 ```bash
-make verify-06
+make verify-06     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-06
+make teardown-06   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

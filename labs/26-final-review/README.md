@@ -14,8 +14,8 @@ clock — treat it as a mock exam. Suggested time: **60 minutes**.
 ## Environment
 
 - **Namespace:** `final` — seeded with a broken deployment `legacy`
-  and an Available manual PersistentVolume `final-pv`
-  (hostPath `/data/final`, 500Mi, RWO).
+  and an Available PersistentVolume `final-pv`
+  (`storageClassName: manual`, hostPath `/data/final`, 500Mi, RWO).
 - **Output dir:** `~/cka-labs-out/26/`
 - **Start here:** `make lab-26`
 
@@ -33,7 +33,8 @@ clock — treat it as a mock exam. Suggested time: **60 minutes**.
 5. Create ConfigMap `shop-config` (`THEME=dark`) and Secret
    `shop-secret` (`API_KEY=abc123`); inject both into `shop` via
    `envFrom`.
-6. Create PVC `final-pvc` that binds the existing `final-pv`, and a
+6. Create PVC `final-pvc` (`storageClassName: manual`, `ReadWriteOnce`,
+   request `500Mi`) that binds the existing `final-pv`, and a
    pod `writer` (busybox) that mounts it at `/data` and writes its
    hostname to `/data/out.txt`.
 7. Create ServiceAccount `deployer`, Role `deploy-manager` (verbs
@@ -52,20 +53,22 @@ clock — treat it as a mock exam. Suggested time: **60 minutes**.
     `nodeSelector` for it; confirm the rollout succeeds.
 12. On the node, save an etcd snapshot to
     `/var/lib/minikube/etcd-backup/final.db` and record `etcdutl
-    snapshot status` output to `$OUT_DIR/etcd-status.txt`. Finally,
-    save `kubectl get all -n final -o wide` to
-    `$OUT_DIR/final-state.txt`.
+    snapshot status` output to `~/cka-labs-out/26/etcd-status.txt`
+    (the file lives on the host — run the status command via
+    `minikube -p cka-labs ssh -- ... > ~/cka-labs-out/26/etcd-status.txt`).
+    Finally, save `kubectl get all -n final -o wide` to
+    `~/cka-labs-out/26/final-state.txt`.
 
 ## Verify
 
 ```bash
-make verify-26
+make verify-26     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-26
+make teardown-26   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the namespace, the PV, the node label, the snapshot file and

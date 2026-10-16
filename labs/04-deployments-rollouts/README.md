@@ -50,13 +50,13 @@ history/undo/pause/resume, strategies, and ReplicaSets underneath.
 ## Verify
 
 ```bash
-make verify-04
+make verify-04     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-04
+make teardown-04   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

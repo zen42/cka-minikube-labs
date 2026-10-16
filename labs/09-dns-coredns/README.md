@@ -45,8 +45,10 @@ How service discovery actually works: CoreDNS, service FQDNs, pod DNS names,
    kube-dns ClusterIP; searches = `dns.svc.cluster.local`,
    `svc.cluster.local`, `cluster.local`; option `ndots` = `2`.
 6. Edit the `coredns` ConfigMap in `kube-system` to (a) enable the `log`
-   plugin and (b) add a `hosts` block mapping `10.1.2.3` →
-   `legacy.internal` with `fallthrough`. Then
+   plugin and (b) add the line `10.1.2.3 legacy.internal` inside the
+   `hosts { ... }` block minikube already ships in the Corefile (a second
+   `hosts` block makes CoreDNS refuse to start — add a new block only if
+   there is none). Then
    `kubectl -n kube-system rollout restart deployment coredns`. From
    `client`, `nslookup legacy.internal` should answer `10.1.2.3`.
 7. Add a stub domain: append a server block forwarding `example.internal`
@@ -60,13 +62,13 @@ How service discovery actually works: CoreDNS, service FQDNs, pod DNS names,
 ## Verify
 
 ```bash
-make verify-09
+make verify-09     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-09
+make teardown-09   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Restores the original `coredns` ConfigMap, restarts CoreDNS, deletes both

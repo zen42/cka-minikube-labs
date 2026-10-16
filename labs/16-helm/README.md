@@ -51,13 +51,13 @@ custom values, scaffolding your own chart, and packaging.
 ## Verify
 
 ```bash
-make verify-16
+make verify-16     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-16
+make teardown-16   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Uninstalls both releases, deletes the namespace, removes the repo entry

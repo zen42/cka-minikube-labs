@@ -56,14 +56,18 @@ Autoscaling and resource governance: `kubectl top`, HorizontalPodAutoscaler
 
 ## Verify
 
+Scale-out (task 4) is judged from the HPA's rescale events, so verify still
+passes after `load` is scaled down — but it is quickest while `load` is
+still running.
+
 ```bash
-make verify-15
+make verify-15     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-15
+make teardown-15   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the namespace and the output dir.

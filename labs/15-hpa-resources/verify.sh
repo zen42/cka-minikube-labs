@@ -35,19 +35,28 @@ check_jsonpath "hpa cpu target is 50" \
     '{.spec.metrics[0].resource.target.averageUtilization}' '50' \
     -n autoscale
 
-# Task 4 — load deploy + HPA actually scaled out (poll — metrics lag)
+# Task 4 — load deploy + HPA actually scaled out (poll — metrics lag).
+# Task 10 scales `load` to 0, so if it is already down accept scale-out
+# EVIDENCE instead: replicas >= 2 or a SuccessfulRescale event.
 check_resource "load generator deployment exists" \
     deployment load -n autoscale
-wait_for "hpa scaled out" 300 \
-    bash -c "kubectl --context $KUBE_CONTEXT -n autoscale get hpa \
-        php-apache -o jsonpath='{.status.desiredReplicas}' 2>/dev/null \
-        | grep -qE '^[2-9]'" || true
+_load_replicas="$(k get deploy load -n autoscale \
+    -o jsonpath='{.spec.replicas}' 2>/dev/null || echo 0)"
+if [[ "${_load_replicas:-0}" != "0" ]]; then
+    wait_for "hpa scaled out" 300 \
+        bash -c "kubectl --context $KUBE_CONTEXT -n autoscale get hpa \
+            php-apache -o jsonpath='{.status.desiredReplicas}' 2>/dev/null \
+            | grep -qE '^[2-9]'" || true
+fi
 _des="$(k get hpa php-apache -n autoscale \
     -o jsonpath='{.status.desiredReplicas}' 2>/dev/null || true)"
 _cur="$(k get hpa php-apache -n autoscale \
     -o jsonpath='{.status.currentReplicas}' 2>/dev/null || true)"
+_rescale="$(k get events -n autoscale \
+    --field-selector involvedObject.kind=HorizontalPodAutoscaler,involvedObject.name=php-apache,reason=SuccessfulRescale \
+    -o name 2>/dev/null || true)"
 check "hpa scaled php-apache above 1 replica" \
-    test "${_cur:-0}" -ge 2 -o "${_des:-0}" -ge 2
+    test "${_cur:-0}" -ge 2 -o "${_des:-0}" -ge 2 -o -n "$_rescale"
 
 # Task 5 — top-pods.txt
 check_file_contains "top-pods.txt lists php-apache" \

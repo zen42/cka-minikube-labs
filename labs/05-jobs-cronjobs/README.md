@@ -36,7 +36,8 @@ deadlines, TTL cleanup, and scheduled CronJobs.
    `activeDeadlineSeconds: 20`. Wait for it to fail with reason
    `DeadlineExceeded`.
 5. Create Job `ttl-job`: busybox:1.36 running `echo done` with
-   `ttlSecondsAfterFinished: 600`.
+   `ttlSecondsAfterFinished: 3600` — the Job is garbage-collected one
+   hour after it finishes.
 6. Create CronJob `backup` with schedule `*/5 * * * *`, image
    `busybox:1.36`, command `sh -c 'echo backing up'`
    (`kubectl create cronjob`).
@@ -53,13 +54,13 @@ deadlines, TTL cleanup, and scheduled CronJobs.
 ## Verify
 
 ```bash
-make verify-05
+make verify-05     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-05
+make teardown-05   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

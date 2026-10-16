@@ -53,13 +53,13 @@ ConfigMap generators, strategic-merge and JSON6902 patches, and the
 ## Verify
 
 ```bash
-make verify-17
+make verify-17     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-17
+make teardown-17   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes both overlays' resources, the namespaces, and the output dir.

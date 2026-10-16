@@ -71,13 +71,13 @@ certificate-based user.
 ## Verify
 
 ```bash
-make verify-10
+make verify-10     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-10
+make teardown-10   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes namespace `rbac`, the RoleBinding in `default`, all ClusterRoles/

@@ -23,6 +23,10 @@ evidence.
   `crictl`, `openssl`, `journalctl`. Static manifests live in
   `/etc/kubernetes/manifests` — edit one and the kubelet restarts the
   pod within ~20s.
+- Node commands that save a file run from the host:
+  `minikube -p cka-labs ssh -- <command> > ~/cka-labs-out/25/<file>`.
+  Plain `minikube -p cka-labs ssh` is fine for interactive exploration —
+  but the saved file must be produced from the host.
 - **Output dir:** `~/cka-labs-out/25/`
 - **Start here:** `make lab-25`
 
@@ -38,13 +42,15 @@ evidence.
    deployment `stuck` finally becomes available.
 4. Save `kubectl get --raw /livez?verbose` and `/readyz?verbose` to
    `livez.txt` / `readyz.txt`.
-5. From `/var/lib/kubelet/config.yaml` on the node, save the
+5. From `/var/lib/kubelet/config.yaml` on the node (via
+   `minikube -p cka-labs ssh --`, saving from the host), save the
    `staticPodPath` line to `static-pod-path.txt`, and list the files
    in that directory to `static-manifests.txt`.
-6. On the node, save `sudo crictl ps --name kube-apiserver` to
+6. On the node (same pattern — run via `minikube -p cka-labs ssh --`,
+   redirect on the host), save `sudo crictl ps --name kube-apiserver` to
    `apiserver-ps.txt` and the last 20 lines of that container's logs
    to `apiserver-log.txt`.
-7. Save `sudo openssl x509 -in
+7. On the node (via `minikube -p cka-labs ssh --`), save `sudo openssl x509 -in
    /var/lib/minikube/certs/apiserver.crt -noout -subject -dates` to
    `apiserver-cert.txt` and the certificate's `subjectAltName` to
    `apiserver-san.txt`.
@@ -53,7 +59,8 @@ evidence.
    `apiserver-owner.txt` — why is a Node the owner of a Pod?
 9. Save the `Liveness` stanza from `kubectl -n kube-system describe
    pod kube-controller-manager-cka-labs` to `cm-liveness.txt`.
-10. On the node, save the last 20 kubelet journal lines mentioning
+10. On the node (via `minikube -p cka-labs ssh --`), save the last 20
+    kubelet journal lines mentioning
     `scheduler` to `kubelet-scheduler.txt`.
 
 ## Recovery
@@ -67,13 +74,13 @@ during setup.
 ## Verify
 
 ```bash
-make verify-25
+make verify-25     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-25
+make teardown-25   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Restores the scheduler manifest, waits for the mirror pod, deletes

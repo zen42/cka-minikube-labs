@@ -188,6 +188,7 @@ metadata:
 spec:
   storageClassName: manual
   accessModes: [ReadWriteOnce]
+  volumeName: pv-delete
   resources:
     requests:
       storage: 1Gi

@@ -50,15 +50,22 @@ flags (`--control-plane-endpoint`, `--upload-certs`, `kubeadm join
   `minikube -p cka-labs ssh`, then
   `sudo /var/lib/minikube/binaries/v1.34.11/kubeadm ...`. In the real
   exam `kubeadm` is on `PATH` and the flow is identical.
+- Node commands that save a file run from the host:
+  `minikube -p cka-labs ssh -- <command> > ~/cka-labs-out/20/<file>`
+  (use `-n <node>` for a worker). Plain `minikube -p cka-labs ssh` is fine
+  for interactive exploration — but the saved file must be produced from
+  the host.
 - Multi-node needs `fs.inotify.max_user_instances >= 1024` on the
   host; `check-env.sh` tells you if yours is too low.
 
 ## Tasks
 
-1. Kubeadm-init prerequisites: inside the control-plane node, save the
+1. Kubeadm-init prerequisites: run on the control-plane node (via
+   `minikube -p cka-labs ssh --`), saving the
    output of `swapon --show`, `lsmod | grep br_netfilter`, and
    `sysctl net.ipv4.ip_forward` to `~/cka-labs-out/20/infra-prep.txt`.
-2. Save `kubeadm version -o yaml` (inside the node) and
+2. Save `kubeadm version -o yaml` (run on the node via
+   `minikube -p cka-labs ssh --`) and
    `kubectl version` to `~/cka-labs-out/20/kubeadm-version.txt` and
    `kubectl-version.txt`.
 3. `kubeadm token create --ttl 2h --print-join-command
@@ -93,13 +100,13 @@ flags (`--control-plane-endpoint`, `--upload-certs`, `kubeadm join
 ## Verify
 
 ```bash
-make verify-20
+make verify-20     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-20
+make teardown-20   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Uncordons all nodes, deletes leftover lab tokens, the namespace, and

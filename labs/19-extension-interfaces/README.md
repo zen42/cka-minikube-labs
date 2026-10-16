@@ -23,6 +23,11 @@ config through the apiserver proxy.
 - **Start here:** `make lab-19`
 - Node access: `minikube -p cka-labs ssh` — `crictl` and the CNI config
   live *inside* the node and need `sudo`.
+- Node commands that save a file run from the host:
+  `minikube -p cka-labs ssh -- <command> > ~/cka-labs-out/19/<file>`
+  (use `-n <node>` for a worker). Plain `minikube -p cka-labs ssh` is fine
+  for interactive exploration — but the saved file must be produced from
+  the host.
 - The CSI work uses two minikube addons (`volumesnapshots` first, then
   `csi-hostpath-driver`). They provision StorageClass `csi-hostpath-sc`
   and VolumeSnapshotClass `csi-hostpath-snapclass`.
@@ -30,7 +35,8 @@ config through the apiserver proxy.
 ## Tasks
 
 1. Save `kubectl get nodes -o wide` to `~/cka-labs-out/19/nodes.txt`.
-   Inside the node, record the kubelet's `containerRuntimeEndpoint`
+   Run on the node (via `minikube -p cka-labs ssh --`): record the
+   kubelet's `containerRuntimeEndpoint`
    (from `/var/lib/kubelet/config.yaml`) to
    `~/cka-labs-out/19/cri-endpoint.txt`, and save `crictl ps`,
    `crictl images`, and `crictl pods --namespace kube-system` to
@@ -47,7 +53,8 @@ config through the apiserver proxy.
 4. Create `VolumeSnapshot` `csi-snap` of `csi-claim` using
    `volumeSnapshotClassName: csi-hostpath-snapclass` and wait until
    `readyToUse` is true.
-5. Kubelet: save `systemctl status kubelet` to
+5. Kubelet (node commands — run them via `minikube -p cka-labs ssh --`,
+   saving from the host): save `systemctl status kubelet` to
    `~/cka-labs-out/19/kubelet-status.txt`, the last 50 journal lines to
    `~/cka-labs-out/19/kubelet-journal.txt`, and
    `kubectl get --raw /api/v1/nodes/cka-labs/proxy/configz | jq .`
@@ -56,13 +63,13 @@ config through the apiserver proxy.
 ## Verify
 
 ```bash
-make verify-19
+make verify-19     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-19
+make teardown-19   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the snapshot/pod/PVC/namespace and disables both addons.

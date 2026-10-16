@@ -42,13 +42,14 @@ access modes, `storageClassName`, reclaim policies, `emptyDir`.
    `hostPath` `/mnt/data/pv-shared`, `5Gi`, `ReadWriteMany`, class `manual`,
    reclaim `Retain`, same `nodeAffinity` as task 1.
 6. Create PV `pv-labeled` (`hostPath` `/mnt/data/pv-labeled`, `1Gi`, RWO,
-   `manual`, label `tier=gold`, same `nodeAffinity`) and PVC `claim-gold`
-   with a
+   `manual`, label `tier=gold`, same `nodeAffinity`) and PVC `claim-gold`:
+   `storageClassName: manual`, `ReadWriteOnce`, `1Gi` (or less), with
    `selector.matchLabels` of `tier=gold`. Confirm it binds `pv-labeled`
    specifically.
 7. Create PV `pv-delete` (`hostPath` `/mnt/data/pv-delete`, `1Gi`, RWO,
    `manual`, reclaim `Delete`, same `nodeAffinity`) and PVC `claim-delete`
-   bound to it; then
+   (`storageClassName: manual`, `ReadWriteOnce`, `1Gi`,
+   `volumeName: pv-delete`) bound to it; then
    delete `claim-delete` and record `pv-delete`'s resulting `STATUS` to
    `~/cka-labs-out/12/pv-delete-status.txt`.
 8. Save `kubectl get pv --sort-by=.spec.capacity.storage` to
@@ -59,13 +60,13 @@ access modes, `storageClassName`, reclaim policies, `emptyDir`.
 ## Verify
 
 ```bash
-make verify-12
+make verify-12     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-12
+make teardown-12   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the namespace, the PVs, the hostPath dirs inside the node, and the

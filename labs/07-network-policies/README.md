@@ -51,7 +51,7 @@ not matter.
 ## Verify
 
 ```bash
-make verify-07
+make verify-07     # from the repo root — or ./verify.sh in this directory
 ```
 
 Checks both the policy objects AND the enforced connectivity matrix
@@ -60,7 +60,7 @@ Checks both the policy objects AND the enforced connectivity matrix
 ## Clean up
 
 ```bash
-make teardown-07
+make teardown-07   # from the repo root — or ./teardown.sh in this directory
 ```
 
 ## Docs

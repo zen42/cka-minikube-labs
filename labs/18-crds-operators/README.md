@@ -24,6 +24,9 @@ cert-manager via its helm chart — and drive it through its CRDs
 - **Start here:** `make lab-18`
 - cert-manager chart: repo `https://charts.jetstack.io`, pinned to
   `CERT_MANAGER_VERSION` in `versions.env` (v1.21.2).
+- Helm and kubectl talk to the cluster through your current kubectl
+  context — make sure it is `cka-labs`
+  (`kubectl config use-context cka-labs`).
 
 ## Tasks
 
@@ -60,13 +63,13 @@ cert-manager via its helm chart — and drive it through its CRDs
 ## Verify
 
 ```bash
-make verify-18
+make verify-18     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-18
+make teardown-18   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the Certificate/Issuer, uninstalls cert-manager, removes its

@@ -51,9 +51,11 @@ Dynamic provisioning: `StorageClass` objects, the default class,
    via a ClusterRole `storage-provisioner-nodes` and a ClusterRoleBinding
    of the same name. Once the provisioner can see the selected node, the
    claim binds.
-6. Make `fast` the default class and remove the default flag from
-   `standard` (annotation `storageclass.kubernetes.io/is-default-class`).
-   Exactly one class may be default.
+6. Make `fast` the default class and un-default `standard`: set the
+   annotation `storageclass.kubernetes.io/is-default-class` to `"false"`
+   on `standard` (do not just delete it) and `"true"` on `fast`, e.g. via
+   `kubectl patch`/`annotate --overwrite`. Exactly one class may be
+   default.
 7. Create PVC `claim-fast` (1Gi, RWO) with no `storageClassName` — it must
    land on `fast`.
 8. Expand `claim-fast` to `2Gi` by editing its
@@ -67,13 +69,13 @@ Dynamic provisioning: `StorageClass` objects, the default class,
 ## Verify
 
 ```bash
-make verify-13
+make verify-13     # from the repo root — or ./verify.sh in this directory
 ```
 
 ## Clean up
 
 ```bash
-make teardown-13
+make teardown-13   # from the repo root — or ./teardown.sh in this directory
 ```
 
 Deletes the namespace, the `fast`/`slow-wait`/`keep` classes, the

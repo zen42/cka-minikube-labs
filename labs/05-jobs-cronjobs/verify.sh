@@ -31,8 +31,8 @@ check_jsonpath "deadline failed with DeadlineExceeded" \
     'DeadlineExceeded' -n batch
 
 # Task 5 — ttl field
-check_jsonpath "ttl-job has ttlSecondsAfterFinished 600" \
-    job/ttl-job '{.spec.ttlSecondsAfterFinished}' '600' -n batch
+check_jsonpath "ttl-job has ttlSecondsAfterFinished 3600" \
+    job/ttl-job '{.spec.ttlSecondsAfterFinished}' '3600' -n batch
 
 # Task 6 — cronjob backup
 check_jsonpath "backup schedule is */5" \
