@@ -5,28 +5,21 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/common.sh"
 
 lab_banner() { :; }   # top-level script: silence per-lab banner
 
+require_command minikube "install from https://minikube.sigs.k8s.io/docs/start/"
+require_command kubectl  "run: scripts/install-tools.sh"
+require_command jq       "install via your package manager"
+require_command curl     "install via your package manager"
+
 info "bootstrapping minikube profile '$MINIKUBE_PROFILE'"
 
-# --- driver detection ------------------------------------------------------
-detect_driver() {
-    if [[ -n "${MINIKUBE_DRIVER:-}" ]]; then
-        printf '%s\n' "$MINIKUBE_DRIVER"; return 0
-    fi
-    if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
-        printf 'docker\n'; return 0
-    fi
-    if command -v podman >/dev/null 2>&1; then
-        if sudo -n podman info >/dev/null 2>&1 || podman info >/dev/null 2>&1; then
-            printf 'podman\n'; return 0
-        fi
-    fi
-    die "no usable container driver found — install docker or podman \
+# --- driver detection (shared helpers in common.sh) -------------------------
+DRIVER="$(detect_driver)" \
+    || die "no usable container driver found — install docker or podman \
 (or export MINIKUBE_DRIVER=<driver>)"
-}
-DRIVER="$(detect_driver)"
+apply_podman_mode "$DRIVER"
 info "driver: $DRIVER"
 
-# --- podman quirks on this host ---------------------------------------------
+# --- podman quirks ---------------------------------------------------------
 # Podman dns_enabled networks hand containers a resolver on the network
 # gateway — aardvark-dns listening on a host bridge IP. Reaching it is
 # host-INPUT traffic, which a firewall with INPUT policy DROP (stock UFW)
@@ -109,6 +102,9 @@ disk_gb=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
 (( cpus >= 4 ))   || warn "host has $cpus CPU (<4 recommended)"
 (( mem_mb >= 8192 )) || warn "host has ${mem_mb}MB RAM (<8GB recommended)"
 (( disk_gb >= 20 )) || warn "only ${disk_gb}GB free on / (<20GB recommended)"
+(( MINIKUBE_MEMORY < 8192 )) \
+    && info "host RAM ${mem_mb} MiB -> node memory ${MINIKUBE_MEMORY} MiB; \
+8192 recommended, ingress-nginx may throttle"
 
 # --- start or resume the profile -------------------------------------------
 cluster_running() {

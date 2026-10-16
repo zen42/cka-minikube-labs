@@ -16,11 +16,12 @@ for cmd in minikube kubectl helm kustomize etcdctl jq curl make; do
 done
 
 driver=""
-if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+if docker_usable; then
     driver="docker"
-elif command -v podman >/dev/null 2>&1 \
-    && { sudo -n podman info >/dev/null 2>&1 || podman info >/dev/null 2>&1; }; then
-    driver="podman"
+elif podman_rootful_usable; then
+    driver="podman (rootful)"
+elif podman_rootless_usable; then
+    driver="podman (rootless, experimental)"
 fi
 if [[ -n "$driver" ]]; then
     info "container driver: $driver"

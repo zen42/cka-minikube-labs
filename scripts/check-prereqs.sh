@@ -31,11 +31,12 @@ else
 fi
 
 driver_found=""
-if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+if docker_usable; then
     driver_found="docker"
-elif command -v podman >/dev/null 2>&1; then
-    if sudo -n podman info >/dev/null 2>&1; then driver_found="podman (rootful via sudo -n)";
-    elif podman info >/dev/null 2>&1;         then driver_found="podman (rootless)"; fi
+elif podman_rootful_usable; then
+    driver_found="podman (rootful)"
+elif podman_rootless_usable; then
+    driver_found="podman (rootless, experimental)"
 fi
 if [[ -n "$driver_found" ]]; then
     ok "container driver" "$driver_found"
@@ -51,7 +52,7 @@ for tool in kubectl helm kustomize etcdctl; do
     fi
 done
 
-for tool in jq curl make; do
+for tool in jq curl make openssl; do
     if command -v "$tool" >/dev/null 2>&1; then
         ok "$tool"
     else
@@ -66,7 +67,18 @@ cpus=$(nproc)
 mem_mb=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
 disk_gb=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
 (( cpus >= 4 ))        && ok "CPU cores (>=4)" "$cpus"        || warned "CPU cores (>=4)" "$cpus"
-(( mem_mb >= 8192 ))   && ok "RAM (>=8 GB)" "${mem_mb} MB"    || warned "RAM (>=8 GB)" "${mem_mb} MB"
+# MemTotal under-reports marketing RAM (a "16 GB" box shows ~15.8 GiB) —
+# thresholds are conservative: 15000 MiB ~ 16 GB, 7500 MiB ~ 8 GB.
+if (( mem_mb >= 15000 )); then
+    ok "RAM (>=16 GB)" "${mem_mb} MB"
+elif (( mem_mb >= 7500 )); then
+    warned "RAM (8-16 GB)" \
+        "${mem_mb} MB — multi-node labs 14/20/23 will be tight"
+else
+    warned "RAM (<8 GB)" \
+        "${mem_mb} MB — single-node only, expect ingress throttling"
+fi
+echo "      node memory auto-sizes to half of host RAM (floor 4 GiB); override: export MINIKUBE_MEMORY=8192"
 (( disk_gb >= 20 ))    && ok "free disk on / (>=20 GB)" "${disk_gb} GB" \
                        || warned "free disk on / (>=20 GB)" "${disk_gb} GB"
 

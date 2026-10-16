@@ -89,6 +89,57 @@ podman_cmd() {
     else printf 'podman'; fi
 }
 
+# --- driver detection ---------------------------------------------------------
+# Called only by setup/teardown/check-prereqs/lab00 check-env — never at
+# source time (common.sh is sourced by every lab script; keep it cheap).
+docker_usable()         { command -v docker >/dev/null 2>&1 \
+                          && docker info >/dev/null 2>&1; }
+podman_rootful_usable() { command -v podman >/dev/null 2>&1 \
+                          && sudo -n podman info >/dev/null 2>&1; }
+podman_rootless_usable(){ command -v podman >/dev/null 2>&1 \
+                          && podman info >/dev/null 2>&1; }
+
+# detect_driver — prints 'docker' or 'podman'; honours $MINIKUBE_DRIVER.
+# Returns 1 (prints nothing) when nothing is usable — callers decide to die.
+detect_driver() {
+    if [[ -n "${MINIKUBE_DRIVER:-}" ]]; then
+        printf '%s\n' "$MINIKUBE_DRIVER"; return 0
+    fi
+    docker_usable         && { printf 'docker\n'; return 0; }
+    podman_rootful_usable  || podman_rootless_usable \
+                          || return 1
+    printf 'podman\n'
+}
+
+# apply_podman_mode [driver] — when the driver is podman, rootful is NOT
+# usable and rootless IS: export MINIKUBE_ROOTLESS=true so minikube
+# start/delete/node add all run rootless. Otherwise leaves the env alone.
+# Rootless is experimental — the extra checks below warn, never die.
+apply_podman_mode() {
+    local driver="${1:-$(detect_driver 2>/dev/null || true)}"
+    [[ "$driver" == "podman" ]] || return 0
+    podman_rootful_usable && return 0   # rootful wins: minikube's default
+    podman_rootless_usable || return 0
+    export MINIKUBE_ROOTLESS=true
+    warn "using rootless podman (experimental — less tested than rootful)"
+    if [[ "${MINIKUBE_RUNTIME:-containerd}" != "containerd" ]]; then
+        warn "rootless podman works best with MINIKUBE_RUNTIME=containerd \
+(currently '${MINIKUBE_RUNTIME:-unset}')"
+    fi
+    local ctrlf="/sys/fs/cgroup/user.slice/user-${UID}.slice/user@${UID}.service/cgroup.controllers"
+    if [[ -f "$ctrlf" ]]; then
+        local c
+        for c in cpu memory pids; do
+            grep -qw "$c" "$ctrlf" \
+                || warn "rootless podman: cgroup v2 controller '$c' is not \
+delegated to your user — see https://minikube.sigs.k8s.io/docs/drivers/podman/"
+        done
+    else
+        warn "rootless podman: cannot determine cgroup v2 delegation \
+($ctrlf missing) — see https://minikube.sigs.k8s.io/docs/drivers/podman/"
+    fi
+}
+
 minikube_node_count() {
     k get nodes --no-headers 2>/dev/null | wc -l
 }
@@ -435,7 +486,7 @@ kube_dns_ip() {
     k -n kube-system get svc kube-dns -o jsonpath='{.spec.clusterIP}'
 }
 
-# harden_ingress_nginx — patch the ingress-nginx addon for this host's
+# harden_ingress_nginx — patch the ingress-nginx addon for podman-driver
 # quirks (reuseport blackholes ~half of connections after a reload; the
 # addon's 1s probes kill the controller under memory stalls). Idempotent:
 # patches are applied only when values differ; the rollout restart runs

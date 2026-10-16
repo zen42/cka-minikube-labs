@@ -18,7 +18,9 @@ setup-minikube.sh: the cluster itself, stray kubeconfig entries, a
 leftover driver network of the same name, and .state/ backups (which
 reference the deleted cluster anyway).
 
-  --all   also wipe learner state: $PROGRESS_DIR and $OUT_ROOT/
+  --all   also wipe learner state: $PROGRESS_DIR and the lab output
+          dirs ($OUT_ROOT/NN) — refuses if CKA_OUT points at /, ~ or
+          the repo itself
 
 Afterwards 'make setup' bootstraps a clean cluster.
 EOF
@@ -34,6 +36,18 @@ for arg in "$@"; do
 done
 
 require_command jq "install via your distro"
+
+# same rootless/rootful decision setup made (minikube stores it in the
+# profile config too); never die here when no driver is found — the
+# profile deletion below must still be attempted.
+apply_podman_mode || true
+
+if (( wipe_all )); then
+    case "$OUT_ROOT" in
+        ""|"/"|"$HOME"|"$REPO_ROOT")
+            die "refusing --all: CKA_OUT/OUT_ROOT resolves to '$OUT_ROOT'" ;;
+    esac
+fi
 
 info "tearing down minikube profile '$MINIKUBE_PROFILE'"
 
@@ -99,9 +113,24 @@ rm_rf() {   # refuse to delete anything outside the repo or $HOME
 }
 rm_rf "$STATE_DIR"
 
+# --all removes only the per-lab output dirs ($OUT_ROOT/NN), never
+# $OUT_ROOT itself unless it is left empty — CKA_OUT could point anywhere.
+wipe_out_dirs() {
+    [[ -d "$OUT_ROOT" ]] || return 0
+    local d removed=0
+    for d in "$OUT_ROOT"/[0-9][0-9]; do
+        [[ -d "$d" ]] || continue
+        info "removing $d"
+        rm -rf "$d"
+        removed=1
+    done
+    rmdir "$OUT_ROOT" 2>/dev/null || true   # drops it only if now empty
+    (( removed )) || info "nothing to remove under $OUT_ROOT"
+}
+
 if (( wipe_all )); then
     rm_rf "$PROGRESS_DIR"
-    rm_rf "$OUT_ROOT"
+    wipe_out_dirs
 fi
 
 # --- summary -------------------------------------------------------------------

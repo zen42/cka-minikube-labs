@@ -103,6 +103,8 @@ shell and pass them to `check`/`check_eq`. Command substitution
 `ensure_namespace`, `delete_namespace_if_exists`, `delete_if_exists`,
 `wait_for <desc> <s> <cmd>`, `wait_rollout`, `wait_pod_ready`, `pod_phase`,
 `all_nodes_ready`, `deploy_available`, `mark_lab_complete`, `lab_is_complete`,
+`docker_usable`, `podman_rootful_usable`, `podman_rootless_usable`,
+`detect_driver`, `apply_podman_mode`, `podman_cmd`,
 `harden_ingress_nginx`, `ensure_node_etcd_tools`.
 
 Globals: `REPO_ROOT`, `LAB_DIR`, `LAB_ID`, `LAB_SLUG`, `LAB_NAME`,
@@ -110,14 +112,16 @@ Globals: `REPO_ROOT`, `LAB_DIR`, `LAB_ID`, `LAB_SLUG`, `LAB_NAME`,
 
 ## Environment quirks
 
-- Driver is auto-detected: docker, then podman. On this host only rootful
-  podman works (`sudo -n podman` is passwordless); minikube wraps podman
-  calls in sudo itself.
+- Driver is auto-detected: docker, then podman. Developed/tested on
+  Debian 13 with rootful podman (`sudo -n podman`); rootless podman is
+  supported but untested. When only rootless works, `apply_podman_mode`
+  exports `MINIKUBE_ROOTLESS=true` (verified only by stub unit tests).
 - CNI is **Calico** (`MINIKUBE_CNI` in versions.env) — the default
   kindnet/bridge CNI does NOT enforce NetworkPolicy.
 - All versions are pinned in `versions.env` and env-overridable
-  (`: "${VAR:=default}"`). Tools are installed to `~/.local/bin`
-  (`TOOLS_DIR` overridable) by `scripts/install-tools.sh`.
+  (`: "${VAR:=default}"`) EXCEPT `MINIKUBE_PROFILE` — lab scripts
+  hardcode the `cka-labs`/`cka-labs-m0N` names. Tools are installed to
+  `~/.local/bin` (`TOOLS_DIR` overridable) by `scripts/install-tools.sh`.
 - Inside the node: `crictl` at /usr/local/bin, kubeadm/kubelet under
   `/var/lib/minikube/binaries/<k8s-ver>/`, static manifests at
   `/etc/kubernetes/manifests`, etcd data `/var/lib/minikube/etcd`, etcd
@@ -126,14 +130,14 @@ Globals: `REPO_ROOT`, `LAB_DIR`, `LAB_ID`, `LAB_SLUG`, `LAB_NAME`,
 - **podman DNS goes through the gateway resolver** — aardvark-dns
   listening on the network's bridge IP. Container→gateway traffic is
   host-INPUT, which `INPUT policy DROP` firewalls (stock UFW) silently
-  kill — node DNS dies and setup hangs on image pulls. So
+  kill — node DNS dies and setup hangs on image pulls. On such hosts
   `setup-minikube.sh` ALWAYS pre-creates the `cka-labs` podman network
   with `--disable-dns` (aardvark presence is irrelevant): the node then
   uses the host resolver, and podman correctly substitutes real upstreams
   for a systemd-resolved `127.0.0.53` stub. minikube reuses an existing
   network of the same name.
-- **UFW is active with `FORWARD` policy `DROP`** and ICMP explicitly
-  allowed — so container ping works while TCP/UDP die.
+- **Hosts running UFW with `FORWARD` policy `DROP`** (ICMP explicitly
+  allowed) — container ping works while TCP/UDP die.
   `setup-minikube.sh` only DETECTS this (`check_container_egress`,
   overridable probe via `CKA_EGRESS_PROBE_URL`) and INSTRUCTS the user
   (exact `/etc/ufw/before.rules` lines + `sudo ufw reload`); it never runs a
