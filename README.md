@@ -119,10 +119,11 @@ make test-NN      # machine-test the whole lab end-to-end (setup->solve->verify-
   only rootful podman works (e.g. `sudo -n podman info` succeeds), minikube
   handles the sudo calls itself — just ensure your sudoers rule is
   `NOPASSWD` for podman. `make setup` auto-detects a working driver.
-- **podman DNS broken inside the node?** If the host lacks `aardvark-dns`,
-  podman networks give containers a dead resolver (`ErrImagePull` on calico/
-  coredns etc). `make setup` detects this and pre-creates the `cka-labs`
-  podman network with `--disable-dns` so the node uses the host resolver.
+- **podman DNS broken inside the node?** `make setup` pre-creates the
+  `cka-labs` podman network with `--disable-dns` so the node uses the host
+  resolver. Podman's own gateway DNS (aardvark-dns, even when installed)
+  is unreachable under firewalls with INPUT policy DROP — the queries are
+  host-bound traffic, which only INPUT rules allow.
 - **containers can't reach the network (ping works, TCP/UDP dead)?** UFW's
   `FORWARD` chain policy is `DROP` and explicitly allows ICMP only — very
   misleading. `make setup` detects this (`check_container_egress`) and
@@ -132,8 +133,7 @@ make test-NN      # machine-test the whole lab end-to-end (setup->solve->verify-
      `-A ufw-before-forward -o podman+ -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT`
   2. `sudo ufw reload`
   (Broader alternative: `DEFAULT_FORWARD_POLICY="ACCEPT"` in
-  `/etc/default/ufw`. The durable fix for the missing-DNS quirk is
-  `sudo apt install aardvark-dns`.)
+  `/etc/default/ufw`.)
 - **Wrong kubectl context?** Lab scripts don't care — they always use
   `--context cka-labs`. For your own exploring run
   `kubectl config use-context cka-labs`.

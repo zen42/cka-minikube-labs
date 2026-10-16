@@ -27,26 +27,21 @@ DRIVER="$(detect_driver)"
 info "driver: $DRIVER"
 
 # --- podman quirks on this host ---------------------------------------------
-# aardvark-dns is a podman helper, not a PATH binary — check the lib dirs
-# podman searches. (ls of multiple paths won't do: it exits non-zero when
-# ANY operand is missing.)
-aardvark_missing() {
-    command -v aardvark-dns >/dev/null 2>&1 && return 1
-    [[ -e /usr/lib/podman/aardvark-dns \
-        || -e /usr/libexec/podman/aardvark-dns ]] && return 1
-    return 0
-}
-
-# Without aardvark-dns, podman networks with dns_enabled give containers a
-# dead resolver. Fallback fix: pre-create the profile's network with
-# --disable-dns so the node inherits the host resolver. minikube reuses an
-# existing network of the same name.
+# Podman dns_enabled networks hand containers a resolver on the network
+# gateway — aardvark-dns listening on a host bridge IP. Reaching it is
+# host-INPUT traffic, which a firewall with INPUT policy DROP (stock UFW)
+# silently kills: node DNS dies, every image pull stalls, setup looks hung.
+# aardvark-dns is therefore NOT required for this repo — instead we
+# pre-create the profile's network with --disable-dns so the node inherits
+# the HOST resolver (podman substitutes the real upstream servers for a
+# systemd-resolved 127.0.0.53 stub). minikube reuses an existing network
+# of the same name.
 ensure_podman_network() {
     local pc; pc="$(podman_cmd)"
     $pc network exists "$MINIKUBE_PROFILE" 2>/dev/null && return 0
-    aardvark_missing || return 0
-    info "fallback: pre-creating podman network '$MINIKUBE_PROFILE' \
-with --disable-dns (node uses the host resolver)"
+    info "pre-creating podman network '$MINIKUBE_PROFILE' with --disable-dns \
+(node uses the host resolver; podman gateway DNS is unreachable behind \
+INPUT DROP firewalls)"
     $pc network create --disable-dns "$MINIKUBE_PROFILE" >/dev/null
 }
 
@@ -121,12 +116,7 @@ cluster_running() {
 }
 
 # --- podman egress check (detect + instruct, never mutate) -------------------
-if [[ "$DRIVER" == "podman" ]]; then
-    aardvark_missing \
-        && info "aardvark-dns not installed — durable fix: \
-sudo apt install aardvark-dns"
-    check_container_egress
-fi
+[[ "$DRIVER" == "podman" ]] && check_container_egress
 
 # The node container keeps its creation-time cgroup memory.max — raising
 # MINIKUBE_MEMORY in versions.env alone won't enlarge a running node.
