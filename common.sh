@@ -244,6 +244,7 @@ delete_if_exists() {
 wait_for() {
     local desc="$1" timeout="$2"; shift 2
     local deadline=$(( SECONDS + timeout ))
+    info "waiting (up to ${timeout}s): $desc"
     until "$@" >/dev/null 2>&1; do
         (( SECONDS < deadline )) || { error "timed out (${timeout}s) waiting for: $desc"; return 1; }
         sleep 2

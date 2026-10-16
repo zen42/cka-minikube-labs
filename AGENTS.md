@@ -123,11 +123,15 @@ Globals: `REPO_ROOT`, `LAB_DIR`, `LAB_ID`, `LAB_SLUG`, `LAB_NAME`,
   `/etc/kubernetes/manifests`, etcd data `/var/lib/minikube/etcd`, etcd
   certs `/var/lib/minikube/certs/etcd`. Host has no crictl/etcdctl access to
   the cluster's etcd — use `minikube -p cka-labs ssh`.
-- **aardvark-dns is not installed on this host** → podman `dns_enabled`
-  networks hand containers a dead resolver (gateway IP, nothing listening).
-  `setup-minikube.sh` prints the durable fix (`sudo apt install
-  aardvark-dns`) and falls back to pre-creating the `cka-labs` network with
-  `--disable-dns` (minikube reuses an existing network of the same name).
+- **aardvark-dns**: without it, podman `dns_enabled` networks hand
+  containers a dead resolver (gateway IP, nothing listening).
+  `setup-minikube.sh` detects a missing helper (`/usr/lib/podman` or
+  `/usr/libexec/podman` — NOT a PATH binary; note a multi-path `ls` exits
+  non-zero if any operand is absent) and falls back to pre-creating the
+  `cka-labs` network with `--disable-dns` (minikube reuses an existing
+  network of the same name). On this host the package is now installed
+  (`sudo apt install aardvark-dns`) so minikube manages its own
+  dns_enabled network.
 - **UFW is active with `FORWARD` policy `DROP`** and ICMP explicitly
   allowed — so container ping works while TCP/UDP die.
   `setup-minikube.sh` only DETECTS this (`check_container_egress`,

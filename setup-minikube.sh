@@ -27,10 +27,14 @@ DRIVER="$(detect_driver)"
 info "driver: $DRIVER"
 
 # --- podman quirks on this host ---------------------------------------------
+# aardvark-dns is a podman helper, not a PATH binary — check the lib dirs
+# podman searches. (ls of multiple paths won't do: it exits non-zero when
+# ANY operand is missing.)
 aardvark_missing() {
-    ! command -v aardvark-dns >/dev/null 2>&1 \
-        && ! ls /usr/lib/podman/aardvark-dns /usr/libexec/podman/aardvark-dns \
-               >/dev/null 2>&1
+    command -v aardvark-dns >/dev/null 2>&1 && return 1
+    [[ -e /usr/lib/podman/aardvark-dns \
+        || -e /usr/libexec/podman/aardvark-dns ]] && return 1
+    return 0
 }
 
 # Without aardvark-dns, podman networks with dns_enabled give containers a
@@ -146,6 +150,32 @@ ensure_node_memory() {
     fi
 }
 
+# An existing profile may not have been created by this script — a bare
+# 'minikube start -p <profile>' (or a half-deleted profile that got resumed)
+# boots minikube defaults: newest k8s, kindnet CNI. Catch that here instead
+# of polling out in the calico wait below.
+ensure_cluster_matches_pins() {
+    local ver i problems=()
+    for i in $(seq 1 15); do   # apiserver may still be waking after a resume
+        ver="$(k get node "$(control_plane_node)" \
+            -o jsonpath='{.status.nodeInfo.kubeletVersion}' 2>/dev/null)"
+        [[ -n "$ver" ]] && break
+        sleep 2
+    done
+    [[ -n "$ver" ]] || return 0   # can't tell — let the waits below report it
+    [[ "$ver" == "$KUBERNETES_VERSION" ]] \
+        || problems+=("kubernetes $ver != pinned $KUBERNETES_VERSION")
+    if [[ "$MINIKUBE_CNI" == "calico" ]] \
+            && ! k -n kube-system get ds calico-node >/dev/null 2>&1; then
+        problems+=("CNI '$MINIKUBE_CNI' missing — no calico-node daemonset \
+(NetworkPolicy labs will not enforce anything)")
+    fi
+    (( ${#problems[@]} )) || return 0
+    error "profile '$MINIKUBE_PROFILE' exists but does not match versions.env:"
+    printf '  - %s\n' "${problems[@]}" >&2
+    die "recreate it: make teardown-cluster && make setup"
+}
+
 if ! profile_exists; then
     [[ "$DRIVER" == "podman" ]] && ensure_podman_network
     info "creating cluster: $MINIKUBE_PROFILE \
@@ -160,10 +190,12 @@ if ! profile_exists; then
         --memory="$MINIKUBE_MEMORY"
 elif cluster_running; then
     info "profile '$MINIKUBE_PROFILE' is already running — leaving as is"
+    ensure_cluster_matches_pins
     ensure_node_memory
 else
     info "profile exists but is stopped — resuming"
     minikube start -p "$MINIKUBE_PROFILE"
+    ensure_cluster_matches_pins
     ensure_node_memory
 fi
 
