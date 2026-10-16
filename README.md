@@ -145,4 +145,4 @@ make test-NN      # machine-test the whole lab end-to-end (setup->solve->verify-
 
 ## License
 
-None — personal study material.
+Apache License 2.0 — see `LICENSE`.

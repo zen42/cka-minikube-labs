@@ -1,0 +1,4 @@
+.progress/
+.state/
+*.swp
+.out/
